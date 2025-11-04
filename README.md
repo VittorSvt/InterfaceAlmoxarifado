@@ -4,7 +4,8 @@ Este é um aplicativo web responsivo, construído com Google Apps Script e o **D
 
 A aplicação lê dados diretamente de uma Planilha Google, exibe em uma interface interativa com busca e paginação, e permite ao usuário montar uma "cesta de pedidos" (carrinho) para solicitar os itens via um formulário que dispara um e-mail formatado.
 
-![Exemplo de Screenshot da Aplicação](.) 
+![Exemplo de Screenshot da Aplicação](<img width="1902" height="933" alt="image" src="https://github.com/user-attachments/assets/693423bd-9b44-4139-ab8b-c623dd4d303d" />
+) 
 
 ---
 
