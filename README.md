@@ -112,7 +112,3 @@ Para rodar este projeto, você precisa de uma Planilha Google e dos arquivos de 
 * `Scripts.html`: Todo o JavaScript do lado do cliente (frontend). Controla a inicialização do DataTables, os eventos de clique (adicionar/remover do carrinho), a exibição do modal e a chamada para as funções do backend (`google.script.run`).
 
 ---
-
-## 📄 Licença
-
-Distribuído sob a Licença MIT.
