@@ -4,7 +4,12 @@ Este é um aplicativo web responsivo, construído com Google Apps Script e o **D
 
 A aplicação lê dados diretamente de uma Planilha Google, exibe em uma interface interativa com busca e paginação, e permite ao usuário montar uma "cesta de pedidos" (carrinho) para solicitar os itens via um formulário que dispara um e-mail formatado.
 
-![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Carrinho.png) 
+
+# 📷 Imagens do projeto
+
+![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/) 
+![Exemplo de Screenshot da Aplicação](Init.png) 
+![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Send.png) 
 
 ---
 
