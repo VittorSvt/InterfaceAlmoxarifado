@@ -14,9 +14,10 @@ Imagem do "Carrinho":
 ![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Carrinho.png) 
 Imagem da solicitação do pedido:
 
-<div align="center">
-  ![Solicitar](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Send.png)
-</div>
+
+<p align="center">
+  <img src="https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Send.png" alt="Texto alternativo da imagem">
+</p>
 
 ---
 
