@@ -7,10 +7,13 @@ A aplicação lê dados diretamente de uma Planilha Google, exibe em uma interfa
 
 # 📷 Imagens do projeto
 Imagem inicial:
+
 ![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Init.png) 
 Imagem do "Carrinho":
+
 ![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Carrinho.png) 
 Imagem da solicitação do pedido:
+
 ![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Send.png) 
 
 ---
