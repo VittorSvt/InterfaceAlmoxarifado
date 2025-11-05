@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    
+    <link rel="stylesheet" href="https://cdn.www.gov.br/ds/fonts/rawline/css/rawline.css" />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.6.2/dist/core.min.css" />
+
+<style>
+  
+        /* Impede o usuário de redimensionar a caixa de observações no formulário */
+        textarea {
+            resize: none;
+        }
+
+        /* 1. Remove o fundo de hover APENAS dos logos (imagens) */
+        .header-logo a:hover,
+        .footer-logo a:hover {
+            background: none !important;
+            background-color: transparent !important;
+        }
+        
+        /* 2. Arredonda o fundo de hover dos links do menu dropdown (MAIS ARREDONDADO) */
+
+         .header-links .br-list a.br-item:hover {
+          border-radius: var(--surface-border-radius-lg, 8px); /* Raio maior (8px) */
+        }
+        
+        /* [NOVO] 3. Arredonda os botões de paginação da tabela */
+          .footer-assign {
+          border-radius: var(--surface-border-radius-lg, 8px); /* Raio maior (8px) */
+        }
+        /* Define o raio da borda para todos os botões e remove a borda padrão */
+        .dataTables_wrapper .paginate_button {
+            border: 1px ;
+            border-radius: var(--surface-border-radius-lg, 10px); /* Raio de 8px */
+            margin: 0 1px; /* Adiciona um pequeno espaçamento entre os botões */
+        }
+
+        /* Estilo de HOVER (para botões inativos como "2" ou "Próximo") */
+        .dataTables_wrapper .paginate_button:hover {
+            background: var(--blue-10, #e8f1fb); /* Fundo azul claro */
+            color: var(--blue-dark-60, #1a417e) !D; /* Texto azul escuro */
+        }
+        
+        /* Estilo do botão ATIVO (página atual, ex: "1") */
+        .dataTables_wrapper .paginate_button.current,
+        .dataTables_wrapper .paginate_button.current:hover {
+            background: var(--blue-dark-60, #1a417e); /* Fundo azul escuro */
+            color: var(--color-white, #fff) !important; /* Texto branco */
+            border-color: var(--blue-dark-60, #1a417e);
+        }
+
+
+        /* [NOVO] Adiciona negrito aos cabeçalhos das tabelas */
+        .br-table th {
+            font-weight: bold;
+        }
+
+        /* Classe auxiliar principal. Usada pelo JS para esconder a coluna da direita */
+        .hide {
+            display: none;
+        }
+
+        /* --- CSS do Modal de Formulário (#custom-modal) --- */
+        .custom-modal-overlay {
+          visibility: hidden; opacity: 0; position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0, 0, 0, 0.6);
+          z-index: 1000; /* Fica acima do conteúdo, mas abaixo do loader */
+          display: flex; align-items: center; justify-content: center;
+          transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .custom-modal-overlay.show {
+          visibility: visible; opacity: 1;
+        }
+        .custom-modal-content {
+          background: #fff; border-radius: 8px; padding: 16px;
+          width: 90%; max-width: 600px; max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .custom-modal-header {
+          display: flex; justify-content: space-between; align-items: center;
+          border-bottom: 1px solid #eee;
+          padding-bottom: 10px; margin-bottom: 20px;
+        }
+        .custom-modal-footer {
+          display: flex; justify-content: flex-end; gap: 10px;
+          border-top: 1px solid #eee;
+          padding-top: 15px; margin-top: 20px;
+        }
+
+        /* --- CSS do Modal de Loading (#loader-modal) --- */
+        #loader-modal {
+          z-index: 9999; /* Fica acima de TUDO */
+          background: rgba(255, 255, 255, 0.85); /* Fundo branco semi-transparente */
+        }
+        
+        /* --- Customização dos Controles do DataTable --- */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+          margin-bottom: 1rem;
+        }
+        .dataTables_wrapper .dataTables_length {
+          text-align: left;
+        }
+        .dataTables_wrapper .dataTables_info {
+          width: 100%;
+          text-align: center;
+          padding-top: 0.5rem;
+        }
+        .dataTables_wrapper .dataTables_paginate {
+          width: 100%;
+          text-align: center;
+          justify-content: center;
+          padding-top: 0.5rem;
+        }
+        .dataTables_wrapper .paginate_button {
+          font-size: 1.05rem !important;
+          padding: 0.5em 1em !important;
+          cursor: pointer;
+        }
+        #tabela tbody td:last-child {
+            vertical-align: middle;
+            text-align: center;
+        }
+        
+        /* --- Estilos para Dispositivos Móveis (Celular) --- */
+        @media (max-width: 767px) {
+        
+            /* [NOVO] RESPONSIVIDADE DA TABELA PRINCIPAL */
+            /* Esconde colunas menos importantes no celular */
+            #tabela th:nth-child(1), /* Esconde Header "Nº" */
+            #tabela td:nth-child(1), /* Esconde Célula "Nº" */
+            #tabela th:nth-child(4), /* Esconde Header "Localização" */
+            #tabela td:nth-child(4) { /* Esconde Célula "Localização" */
+                display: none;
+            }
+            
+            /* Ajusta a largura das colunas restantes */
+            #tabela th:nth-child(2),
+            #tabela td:nth-child(2) { width: 50% !important; } /* Descrição */
+            
+            #tabela th:nth-child(3),
+            #tabela td:nth-child(3) { width: 20% !important; } /* Quantidade */
+            
+            #tabela th:nth-child(5),
+            #tabela td:nth-child(5) { width: 30% !important; } /* Solicitar */
+            
+        
+            #custom-modal .custom-modal-content {
+                width: 95vw !important;
+                height: 95vh !important;
+                max-width: 95vw !important;
+                max-height: 95vh !important;
+                padding: 10px !important;
+            }
+            #custom-modal .custom-modal-content label,
+            #custom-modal .custom-modal-content input,
+            #custom-modal .custom-modal-content textarea,
+            #custom-modal .custom-modal-content .br-button {
+                font-size: 1.3rem !important;
+            }
+            #custom-modal .custom-modal-content .br-modal-title {
+                 font-size: 1.5rem !important;
+            }
+            #custom-modal .br-input input, 
+            #custom-modal .br-textarea textarea {
+                padding-top: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
+            }
+        }
+
+        /* --- Estilos para o Rodapé Simplificado --- */
+        .footer-simplificado {
+          padding: 1rem 0; 
+          border-top: 1px solid var(--color-gray-20); 
+          margin-top: 2rem;
+        }
+        .footer-logo {
+          text-align: center; 
+          margin-bottom: 0.5rem;
+        }
+        .footer-assign {
+          text-align: center; 
+          font-size: 0.8rem; 
+          color: var(--color-gray-60); 
+          line-height: 1.5;
+        }
+        
+    </style>
+</head>
+
+<body>
+
+    <div class="br-message success" role="alert" id="toast-notificacao" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px;">
+      <div class="icon"><i class="fas fa-check-circle" aria-hidden="true"></i>
+      </div>
+      <div class="content">
+        <span class="message-title" id="toast-titulo"></span>
+        <span class="message-body" id="toast-mensagem"></span>
+      </div>
+    </div>
+
+    <div class="custom-modal-overlay show" id="loader-modal">
+        <div class="br-loading large" role="progressbar"></div>
+    </div>
+
+    
+    <header class="br-header" id="header">
+      <div class="container-lg">
+        <div class="header-top">
+          <div class="header-logo">
+             <a href="https://www.gov.br/"target="_blank">
+            <img src="https://barra.sistema.gov.br/v1/assets/govbr.webp" target alt="Logo GOV.BR">
+              </a>
+            <span class="br-divider vertical"></span>
+          </div>
+          <div class="header-actions">
+            
+            <div class="header-links dropdown">
+              <button class="br-button circle small" type="button" data-toggle="dropdown" aria-label="Abrir Acesso Rápido"><i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+              </button>
+              <div class="br-list">
+                <div class="header">
+                  <div class="title">Acesso Rápido</div>
+                </div> <a class="br-item" href="https://videira.ifc.edu.br/" target="_blank">IFC Videira</a><a class="br-item" href="https://www.gov.br/acessoainformacao/pt-br"target="_blank">Acesso à Informação</a><a class="br-item" href="https://www.gov.br/governodigital/pt-br/legislacao"target="_blank">Legislação</a><a class="br-item" href="https://www.gov.br/governodigital/pt-br/acessibilidade-digital"target="_blank">Acessibilidade</a>
+              </div>
+            </div><span class="br-divider vertical mx-half mx-sm-1"></span>
+            
+            <div class="header-search-trigger">
+              <button class="br-button circle" type="button" aria-label="Abrir Busca" data-toggle="search" data-target=".header-search"><i class="fas fa-search" aria-hidden="true"></i>
+              </button>
+            </div>
+            
+            </div>
+        </div>
+        <div class="header-bottom">
+          <div class="header-menu">
+            <div class="header-info">
+              <div class="header-title"><?= serviceTitle ?></div>
+              </div>
+          </div>
+          <div class="header-search">
+            <div class="br-input has-icon">
+              <label for="searchbox-663">Texto da pesquisa</label>
+              <input id="searchbox-663" type="text" placeholder="O que você procura?"/>
+              <button class="br-button circle small" type="button" aria-label="Pesquisar"><i class="fas fa-search" aria-hidden="true"></i>
+              </button>
+            </div>
+            <button class="br-button circle search-close ml-1" type="button" aria-label="Fechar Busca" data-dismiss="search"><i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+    
+    <div class="container-lg" style="padding-top: 20px;">
+        <div class="br-row">
+            
+            <div >
+                <div class="table-responsive" title="Itens no Estoque">
+                    <div class="br-table">
+                        <table id="tabela" class="w-100" style="table-layout: fixed; min-width: 650px;">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="text-center" >Nº</th>
+                                    <th scope="col" class="text-center" >Descrição</th>
+                                    <th scope="col" class="text-center" >Quantidade</th>
+                                    <th scope="col" class="text-center" >Localização</th>
+                                    <th scope="col" class="text-center" >Solicitar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div >
+                <div id="solicitacao-container" class="hide">
+                    
+                    <h5 class="br-list-header" style="text-align: center; font-size: 1.2rem;">Cesta de Pedidos</h5>
+                    
+                    <div class="table-responsive">
+                        <div class="br-table">
+                            <table id="tabelaReserva" class="w-100 table-sm">
+                              <caption>Lista de reservas</caption>
+                              <colgroup>
+                                <col style="width: 80%;">
+                                <col style="width: 10%;">
+                                <col style="width: 10%;">
+                              </colgroup>
+                              <thead>
+                                <tr>
+                                  <th scope="col" class="text-left">Descrição</th>
+                                  <th scope="col" class="text-center">Quantidade</th>
+                                  <th scope="col" class="text-center">Remover</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <hr>
+                    <button class="br-button primary" type="button" id="botaoMostrarForm">
+                      Preencher Dados da Solicitação
+                    </button>
+                </div> 
+            </div>
+            
+        </div>
+    </div> 
+    
+    <div class="custom-modal-overlay" id="custom-modal">
+      <div class="custom-modal-content">
+        <div class="custom-modal-header">
+          <h4 class="br-modal-title">Dados da Solicitação</h4>
+          <button class="br-button circle" type="button" aria-label="Fechar" id="botaoCancelarModalClose">
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="form-fields">
+          <form role="form" action="#" id="formDados" method="POST">
+            <div class="br-input mb-2">
+              <label for="dadosNome">Seu nome</label>
+              <input id="dadosNome" name="dadosNome" type="text" required />
+            </div>
+            <div class="br-input mb-2">
+              <label for="destinarioEmail">E-mail do destinatário</label>
+              <input id="destinarioEmail" name="destinarioEmail" type="email" placeholder="exemplo@exemplo.com" required />
+            </div>
+            <div class="br-row mb-2">
+              <div class="br-col-6">
+                <div class="br-input">
+                  <label for="dadosTurma">Turma</label>
+                  <input id="dadosTurma" name="dadosTurma" type="text" required />
+                </div>
+              </div>
+              <div class="br-col-6">
+                <div class="br-input">
+                  <label for="dadosDisciplina">Disciplina</label>
+                  <input id="dadosDisciplina" name="dadosDisciplina" type="text" required />
+                </div>
+              </div>
+            </div>
+            <div class="br-input mb-2">
+              <label for="dadosKits">Quantidade de Kits</label>
+              <input id="dadosKits" name="dadosKits" type="tel" required />
+            </div>
+            <div class="br-input mb-2">
+              <label for="dadosData">Data de retirada</label>
+              <input id="dadosData" name="dadosData" type="date" placeholder="dd/mm/aaaa" required />
+            </div>
+            <div class="br-input mb-2">
+              <label for="dadosDataDevolucao">Data final de uso</label>
+              <input id="dadosDataDevolucao" name="dadosDataDevolucao" type="date" placeholder="dd/mm/aaaa" required />
+            </div>
+            <div class="br-textarea mb-2">
+              <label for="dadosObs">Observações</label>
+              <textarea id="dadosObs" name="dadosObs" placeholder="Observações"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="custom-modal-footer">
+          <button class="br-button secondary" type="button" id="botaoCancelarModal">
+            Cancelar
+          </button>
+          <button class="br-button primary" type="submit" id="botaoEnviaDados" form="formDados">
+            Confirmar Solicitação
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.6.2/dist/core.min.js"></script>
+    
+    <?!= include('Scripts'); ?>
+    
+    
+    <footer class="br-footer footer-simplificado" id="footer">
+      <div class="container-lg">
+        <div class="footer-logo">
+          <a href="https://www.gov.br/"target="_blank">
+            <img src="https://barra.sistema.gov.br/v1/assets/govbr.webp" target alt="Logo GOV.BR">
+          </a>
+        </div>
+        <div class="footer-assign">
+          <span>Versão <?= version ?></span>
+          <br/>
+          <a class="text-center"  href="https://www.gov.br/ds/home" target="_blank">Desenvolvido parcialmente com o Design System do Gov.br</a>
+          <a class="text-center"  href="https://github.com/VittorSvt" target="_blank">Vitor Silva, Setor patrimônio e almoxarifado</a>
+        </div>
+      </div>
+    </footer>
+    
+</body>
+
+
+</html>

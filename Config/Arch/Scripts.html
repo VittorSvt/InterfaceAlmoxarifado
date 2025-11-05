@@ -1,0 +1,317 @@
+<script>
+    /*
+    ================================================================================
+      1. VARIÁVEIS GLOBAIS
+    ================================================================================
+    */
+
+    var table = null;         // Armazena a instância do DataTable principal (ID #tabela)
+    var tableReserva = null;  // Armazena a instância do DataTable da reserva (ID #tabelaReserva)
+    var listaSolicitacao = new Map(); // Um "Mapa" para guardar os itens do carrinho (key: ID, value: item)
+    var modal = null;         // Armazena o objeto jQuery do modal de formulário (ID #custom-modal)
+    var toast = null;         // Armazena a instância da notificação
+    
+    
+    /*
+    ================================================================================
+      2. FUNÇÃO DO LOADER
+    ================================================================================
+    */
+
+    /**
+     * Esconde o modal de loading (spinner azul)
+     */
+    function hideLoader() {
+        $('#loader-modal').removeClass('show');
+    }
+    
+    
+    /*
+    ================================================================================
+      3. BLOCO PRINCIPAL (window.onload)
+    ================================================================================
+    */
+    window.onload = function () {
+        
+        // Armazena a referência do modal de formulário na variável global
+        modal = $('#custom-modal');
+
+        table = $('#tabela').DataTable({
+          "pageLength": 10, 
+          "language": { 
+              "url": '//cdn.datatables.net/plug-ins/1.10.10/i18n/Portuguese-Brasil.json',
+              "sEmptyTable": "Buscando registros, aguarde...",
+              "sProcessing": "Buscando registros, aguarde..."
+          },
+          
+          "dom":  "<'br-row'<'br-col-12'tr>>" + 
+                  "<'br-row'<'br-col-12'i>>" +  
+                  "<'br-row'<'br-col-12'p>>",   
+
+          "columnDefs": [
+            { 
+              "className": "text-center", 
+              "targets": [ 0, 2, 3 ]       
+            }
+          ]
+        });
+
+        $('#tabela').on('click', '.solicitar-btn', function(e) {
+          e.preventDefault(); 
+          var encoded = this.getAttribute('data-item'); 
+          var json    = decodeURIComponent(encoded);    
+          var obj     = JSON.parse(json);               
+          solicitar(obj); 
+        });
+
+        tableReserva = $('#tabelaReserva').DataTable({ 
+          "paging": false,
+          "searching": false,
+          "language": { "url": '//cdn.datatables.net/plug-ins/1.10.10/i18n/Portuguese-Brasil.json' }
+          });
+
+        $('#tabelaReserva tbody').on("click", ".btn-remover", function () {
+            var id = $(this).parent().context.id.slice(4); 
+            listaSolicitacao.delete(parseInt(id)); 
+            tableReserva.row($(this).parents('tr')).remove().draw(false); 
+            
+            if (listaSolicitacao.size === 0) {
+                $('#solicitacao-container').addClass('hide');
+            }
+        });
+        
+        $('#botaoMostrarForm').on('click', function() {
+            modal.addClass('show');
+        });
+        
+        $('#botaoCancelarModal, #botaoCancelarModalClose').on('click', function() {
+            modal.removeClass('show');
+        });
+
+        $('#formDados').submit(efetuaEmprestimo);
+        
+        getItens(); 
+        
+        function aplicarFiltroHeader() {
+            var valor = $('#searchbox-663').val(); 
+            table.search(valor).draw(); 
+        }
+
+        $('#searchbox-663').on('keyup', aplicarFiltroHeader);
+
+        $('div.header-search .br-input button').on('click', aplicarFiltroHeader);
+
+
+        setTimeout(function() {
+            try {
+                var headerEl = document.querySelector('.br-header');
+                if(headerEl && window.core && core.BRHeader) {
+                    new core.BRHeader('br-header', headerEl);
+                }
+
+                var dropdownEl = document.querySelector('.header-links.dropdown');
+                if(dropdownEl && window.core && core.BRDropdown) {
+                    new core.BRDropdown('br-dropdown', dropdownEl);
+                }
+                console.log("Componentes do Header (busca e dropdown) inicializados.");
+
+            } catch (e) {
+                console.error("Erro ao inicializar componentes do Header (isso é normal se a lib 'core' atrasar):", e);
+            }
+        }, 500); 
+        
+    }; // Fim do window.onload
+ 
+ 
+    /*
+    ================================================================================
+      4. FUNÇÕES PRINCIPAIS DA APLICAÇÃO
+    ================================================================================
+    */
+
+    /**
+     * Busca os dados de inventário no Google Sheets (Code.gs).
+     * [MODIFICADO] O botão "Solicitar" agora é um botão azul.
+     */
+    var getItens = function () {
+      google.script.run 
+        .withSuccessHandler(function (data) { 
+          
+          table.clear(); 
+          
+          var tableData = []; 
+          
+          for (var j = 0; j < data.length; j++) {
+              data[j][3] = j + 1; 
+              var json = JSON.stringify(data[j]); 
+              var safe = encodeURIComponent(json).replace(/'/g,'%27'); 
+              
+              // [MODIFICAÇÃO AQUI] Novo HTML para o botão "Adicionar"
+              var buttonHtml = `
+                <button class="br-button primary small solicitar-btn" type="button" aria-label="Adicionar à lista de reservas" data-item="${safe}">
+                  Adicionar
+                </button>`;
+                
+              tableData.push([
+                  j+1,        
+                  data[j][0], 
+                  data[j][1], 
+                  data[j][2], 
+                  buttonHtml  
+              ]);
+          }
+          table.rows.add(tableData).draw();
+          
+          hideLoader();
+          
+        })
+        .withFailureHandler(function(error) { 
+            console.error("Erro ao buscar inventário: " + error.message);
+            hideLoader(); 
+            table.clear().draw(); 
+            showToast('danger', 'Erro ao Carregar', 'Não foi possível carregar os itens. Tente recarregar a página.');
+        })
+        .getInventory(); 
+    };
+
+    /**
+     * Adiciona um item à lista de solicitação (carrinho).
+     */
+    var solicitar = function (item) {
+      
+      $('#solicitacao-container').removeClass('hide');
+      
+      if (!listaSolicitacao.has(item[3])) {
+        
+        listaSolicitacao.set(item[3], item); 
+        item[1] = 1; 
+        
+        var inputQtd = 
+          '<div class="br-input small">' +
+            '<input type="tel" ' +
+              'id="qtd_' + item[3] + '" ' +
+              'name="Quantidade" ' +
+              'style="width: 60px;" ' + 
+              'onblur="editarQuantidade(' + item[3] + ')" ' + 
+              'value="' + item[1] + '" ' +
+              'required>' +
+          '</div>';
+          
+        var btnRemover = 
+          '<button type="button" class="br-button danger small btn-remover" id="rem_' + item[3] + '">' +
+            'Remover' +
+          '</button>';
+
+        tableReserva.row.add([
+          item[0],    
+          inputQtd,   
+          btnRemover  
+        ]).draw(false); 
+      } else {
+        showToast('info', 'Item já Adicionado', 'Este item já está na sua cesta de pedidos.');
+      }
+    };
+
+    /**
+     * Atualiza a quantidade de um item no Map 'listaSolicitacao'.
+     */
+    var editarQuantidade = function (posicao) {
+        var valor = $('#qtd_' + posicao).val(); 
+        let item = listaSolicitacao.get(posicao); 
+        item[1] = valor; 
+        listaSolicitacao.set(posicao, item); 
+    };
+
+    /**
+     * Efetua o empréstimo (envia a solicitação).
+     */
+    function efetuaEmprestimo() {
+        var nome = $('input[name=dadosNome]').val();
+        var destinarioEmail = $('input[name=destinarioEmail]').val();
+        var turma = $('input[name=dadosTurma]').val();
+        var disciplina = $('input[name=dadosDisciplina]').val();
+        var kits = $('input[name=dadosKits]').val();
+        
+        var dataRetiradaInput = $('input[name=dadosData]').val();
+        var dataDevolucaoInput = $('input[name=dadosDataDevolucao]').val();
+        
+        var dataRetirada = dataRetiradaInput.split('-').reverse().join('/');
+        var dataDevolucao = dataDevolucaoInput.split('-').reverse().join('/');
+        
+        var obs = $('textarea[name=dadosObs]').val();
+        
+        modal.removeClass('show');
+
+        var data = {
+          'nome':nome,
+          'destinarioEmail':destinarioEmail,
+          'turma':turma,
+          'disciplina':disciplina,
+          'kits':kits,
+          'dataRetirada':dataRetirada,
+          'dataDevolucao':dataDevolucao,
+          'obs':obs
+        }
+        
+        google.script.run
+          .withSuccessHandler(function (msg) { 
+          
+            showToast(
+              'success', 
+              msg['name'], 
+              msg['message'] 
+            );
+
+            if (msg['clear']) {
+                tableReserva.clear().draw();
+                listaSolicitacao = new Map();
+                $('#solicitacao-container').addClass('hide');
+            }
+        })
+        .solicitar(JSON.stringify([...listaSolicitacao]), data); 
+        
+        return false; 
+    }
+
+    
+    /**
+     * Exibe a notificação (toast) customizada.
+     */
+    function showToast(type, title, message) {
+        var toastEl = $('#toast-notificacao');
+        
+        if (!toast) {
+            var toastElDom = document.querySelector('#toast-notificacao');
+            if (toastElDom && window.core && core.BRMessage) {
+                toast = new core.BRMessage('br-message', toastElDom);
+            }
+        }
+        
+        toastEl.removeClass('success danger info warning').addClass(type);
+        
+        var iconClass = 'fa-check-circle'; 
+        if (type === 'danger') iconClass = 'fa-times-circle';
+        if (type === 'info') iconClass = 'fa-info-circle';
+        if (type === 'warning') iconClass = 'fa-exclamation-triangle';
+        
+        toastEl.find('.icon i').attr('class', 'fas ' + iconClass);
+        
+        $('#toast-titulo').text(title);
+        $('#toast-mensagem').text(message || 'Sua solicitação será respondida em breve.'); 
+        
+        if(toast) {
+          toast.show();
+        } else {
+          toastEl.fadeIn('fast');
+        }
+        
+        setTimeout(function() {
+            if(toast) {
+              toast.hide();
+            } else {
+              toastEl.fadeOut('slow');
+            }
+        }, 5000);
+    }
+
+</script>
