@@ -7,8 +7,10 @@ A aplicação lê dados diretamente de uma Planilha Google, exibe em uma interfa
 
 # 📷 Imagens do projeto
 
-![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/) 
-![Exemplo de Screenshot da Aplicação](Init.png) 
+![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Carrinho.png) 
+
+![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Init.png) 
+
 ![Exemplo de Screenshot da Aplicação](https://github.com/VittorSvt/InterfaceAlmoxarifado/blob/main/Config/Img/Send.png) 
 
 ---
